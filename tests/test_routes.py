@@ -180,6 +180,26 @@ class TestProductRoutes(TestCase):
         response = self.client.get(f'{BASE_URL}/0')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
    
+    def test_update_product(self):
+        """It should Update an existing Product"""
+        products = self._create_products(2)
+        test_product, other_product = products[0], products[1]
+        # change test_product's description
+        test_product_json = self.client.get(f'{BASE_URL}/{test_product.id}').get_json()
+        test_product_json['description'] = "New Description"
+        response = self.client.put(f'{BASE_URL}/{test_product.id}', json=test_product_json)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # check that the correct product is updated
+        updated_product = self.client.get(f'{BASE_URL}/{test_product.id}').get_json()
+        unchanged_product = self.client.get(f'{BASE_URL}/{other_product.id}').get_json()
+        self.assertEqual(updated_product['description'], "New Description")
+        self.assertEqual(unchanged_product['description'], other_product.description)
+    
+    def test_update_product_not_found(self):
+        """It should not Update a product that is Not Found"""
+        response = self.client.put(f'{BASE_URL}/0')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     ######################################################################
     # Utility functions
     ######################################################################

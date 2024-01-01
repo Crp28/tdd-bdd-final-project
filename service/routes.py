@@ -106,8 +106,9 @@ def create_products():
 # R E A D   A   P R O D U C T
 ######################################################################
 
-@app.route("/products/<product_id>", methods=["GET"])
+@app.route("/products/<int:product_id>", methods=["GET"])
 def get_products(product_id):
+    """This endpoint will get a Product based on the given product id"""
     app.logger.info("Processing request to Retrieve a product with id %s", product_id)
     product = Product.find(product_id)
     if not product:
@@ -118,10 +119,18 @@ def get_products(product_id):
 # U P D A T E   A   P R O D U C T
 ######################################################################
 
-#
-# PLACE YOUR CODE TO UPDATE A PRODUCT HERE
-#
-
+@app.route("/products/<int:product_id>", methods=["PUT"])
+def update_products(product_id):
+    """This endpoint will update a Product based on the given product id"""
+    app.logger.info("Processing request to Update a product with id %s", product_id)
+    product = Product.find(product_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, 'Product not found')
+    product.deserialize(request.get_json())
+    product.id = product_id
+    product.update()
+    return product.serialize(), status.HTTP_200_OK
+    
 ######################################################################
 # D E L E T E   A   P R O D U C T
 ######################################################################
