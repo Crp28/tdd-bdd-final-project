@@ -104,3 +104,115 @@ class TestProductModel(unittest.TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+
+    def test_read_a_product(self):
+        """It should Read from the database using a product ID"""
+        product = ProductFactory()
+        app.logger.debug("Creating product %s", product)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        read = Product.find(product.id)
+        self.assertEqual(read.id, product.id)
+        self.assertEqual(read.name, product.name)
+        self.assertEqual(read.description, product.description)
+        self.assertEqual(read.price, product.price)
+        self.assertEqual(read.available, product.available)
+        self.assertEqual(read.category, product.category)
+
+    def test_update_a_product(self):
+        """It should Update properties of a product"""
+        product = ProductFactory()
+        app.logger.debug("Creating product %s", product)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        app.logger.debug("Product %s created", product)
+        original_id = product.id
+        # change product description property
+        product.description = "new description"
+        product.update()
+        read = Product.find(product.id)
+        self.assertEqual(read.id, product.id)
+        self.assertEqual(read.description, "new description")
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 1)
+        self.assertEqual(all_products[0].id, original_id)
+        self.assertEqual(all_products[0].description, "new description")
+
+    def test_delete_a_product(self):
+        """It should Delete a product from the database"""
+        product = ProductFactory()
+        app.logger.debug("Creating product %s", product)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        app.logger.debug("Product %s created", product)
+        # check if product exists
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 1)
+        # remove from system
+        product.delete()
+        curr_products = Product.all()
+        self.assertNotIn(product, curr_products)
+        self.assertEqual(len(curr_products), 0)
+        
+    def test_list_all_products(self):
+        """It should list all products currently in the system"""
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 0)
+        for i in range(0, 5):
+            product = ProductFactory()
+            app.logger.debug("Creating product %s", product)
+            product.id = None
+            product.create()
+        curr_products = Product.all()
+        self.assertEqual(len(curr_products), 5)
+
+    def test_find_product_by_name(self):
+        """It should retrive products from the database based on their name"""
+        for i in range(0, 5):
+            product = ProductFactory()
+            app.logger.debug("Creating product %s", product)
+            product.id = None
+            product.create()
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 5)
+        name_of_product = all_products[0].name
+        count = len([product for product in all_products if product.name == name_of_product])
+        found = Product.find_by_name(name_of_product)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.name, name_of_product)
+
+    def test_find_product_by_availability(self):
+        """It should retrive products from the database based on their availability"""
+        for i in range(0, 10):
+            product = ProductFactory()
+            app.logger.debug("Creating product %s", product)
+            product.id = None
+            product.create()
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 10)
+        avail_of_product = all_products[0].available
+        count = len([product for product in all_products if product.available == avail_of_product])
+        found = Product.find_by_availability(avail_of_product)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.available, avail_of_product)
+
+    def test_find_product_by_category(self):
+        """It should retrive products from the database based on their category"""
+        for i in range(0, 10):
+            product = ProductFactory()
+            app.logger.debug("Creating product %s", product)
+            product.id = None
+            product.create()
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 10)
+        category_of_product = all_products[0].category
+        count = len([product for product in all_products if product.category == category_of_product])
+        found = Product.find_by_category(category_of_product)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.category, category_of_product)
