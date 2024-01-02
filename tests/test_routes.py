@@ -181,7 +181,7 @@ class TestProductRoutes(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
    
     def test_update_product(self):
-        """It should Update an existing Product"""
+        """It should Update an existing Product using REST API"""
         products = self._create_products(2)
         test_product, other_product = products[0], products[1]
         # change test_product's description
@@ -199,6 +199,34 @@ class TestProductRoutes(TestCase):
         """It should not Update a product that is Not Found"""
         response = self.client.put(f'{BASE_URL}/0')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_product(self):
+        """It should Delete a Product using REST API"""
+        products = self._create_products(5)
+        count = self.get_product_count()
+        test_product = products[0]
+        # delete the product
+        response = self.client.delete(f'{BASE_URL}/{test_product.id}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertIsNone(response.get_json())
+        # check deletion
+        response = self.client.get(f'{BASE_URL}/{test_product.id}')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(self.get_product_count(), count - 1)
+
+    def test_delete_product_not_found(self):
+        """It should not Delete a product that is Not Found"""
+        response = self.client.delete(f'{BASE_URL}/0')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_all(self):
+        """It should Get a list of all Products"""
+        products = self._create_products(5)
+        response = self.client.get(f'{BASE_URL}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for i in range(0, 5):
+            self.assertIn(response.get_json()[i]['id'], [product.id for product in products])
+
 
     ######################################################################
     # Utility functions
