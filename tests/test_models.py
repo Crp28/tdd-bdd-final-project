@@ -27,7 +27,7 @@ import os
 import logging
 import unittest
 from decimal import Decimal
-from service.models import Product, Category, db
+from service.models import Product, Category, db, DataValidationError
 from service import app
 from tests.factories import ProductFactory
 
@@ -139,6 +139,9 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(all_products), 1)
         self.assertEqual(all_products[0].id, original_id)
         self.assertEqual(all_products[0].description, "new description")
+        # test sad path
+        product.id = 0
+        self.assertRaises(DataValidationError, product.update)
 
     def test_delete_a_product(self):
         """It should Delete a product from the database"""
@@ -184,6 +187,22 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(found.count(), count)
         for product in found:
             self.assertEqual(product.name, name_of_product)
+
+    def test_find_product_by_price(self):
+        """It should retrive products from the database based on their price"""
+        for i in range(0, 5):
+            product = ProductFactory()
+            app.logger.debug("Creating product %s", product)
+            product.id = None
+            product.create()
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 5)
+        price_of_product = all_products[0].price
+        count = len([product for product in all_products if product.price == price_of_product])
+        found = Product.find_by_price(price_of_product)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.price, price_of_product)
 
     def test_find_product_by_availability(self):
         """It should retrive products from the database based on their availability"""
