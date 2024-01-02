@@ -30,7 +30,7 @@ from decimal import Decimal
 from unittest import TestCase
 from service import app
 from service.common import status
-from service.models import db, init_db, Product
+from service.models import db, init_db, Product, Category
 from tests.factories import ProductFactory
 from urllib.parse import quote_plus
 
@@ -238,6 +238,30 @@ class TestProductRoutes(TestCase):
         self.assertEqual(len(response.get_json()), count)
         for i in response.get_json():
             self.assertEqual(i['name'], test_name)
+
+    def test_list_by_category(self):
+        """It should Query Products by category"""
+        products = self._create_products(10)
+        category = products[0].category
+        found = [product for product in products if product.category == category]
+        found_count = len(found)
+        logging.debug("Found Products [%d] %s", found_count, found)
+        response = self.client.get(f'{BASE_URL}', query_string=f"category={category.name}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.get_json()), found_count)
+        for i in response.get_json():
+            self.assertEqual(i['category'], category.name)
+
+    def test_list_by_availability(self):
+        """It should Query Products by availability"""
+        products = self._create_products(10)
+        found = [product for product in products if product.available is True]
+        found_count = len(found)
+        response = self.client.get(f'{BASE_URL}', query_string="available=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.get_json()), found_count)
+        for i in response.get_json():
+            self.assertEqual(i['available'], True)
 
     ######################################################################
     # Utility functions
