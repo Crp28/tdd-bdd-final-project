@@ -100,8 +100,13 @@ def create_products():
 @app.route("/products", methods=["GET"])
 def get_all_products():
     """This endpoint will get all Products"""
-    app.logger.info("Processing request to List all products")
-    products = Product.all()
+    name = request.args.get("name")
+    if name:
+        app.logger.info("Processing request to List products by name %s", name)
+        products = Product.find_by_name(name)
+    else:
+        app.logger.info("Processing request to List all products")
+        products = Product.all()
     results = [product.serialize() for product in products]
     app.logger.info("[%s] Products returned", len(results))
     return results, status.HTTP_200_OK

@@ -32,6 +32,7 @@ from service import app
 from service.common import status
 from service.models import db, init_db, Product
 from tests.factories import ProductFactory
+from urllib.parse import quote_plus
 
 # Disable all but critical errors during normal test run
 # uncomment for debugging failing tests
@@ -227,6 +228,16 @@ class TestProductRoutes(TestCase):
         for i in range(0, 5):
             self.assertIn(response.get_json()[i]['id'], [product.id for product in products])
 
+    def test_list_by_name(self):
+        """It should Query Products by name"""
+        products = self._create_products(5)
+        test_name = products[0].name
+        count = len([product for product in products if product.name == test_name])
+        response = self.client.get(f'{BASE_URL}', query_string=f"name={quote_plus(test_name)}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.get_json()), count)
+        for i in response.get_json():
+            self.assertEqual(i['name'], test_name)
 
     ######################################################################
     # Utility functions
